@@ -22,3 +22,6 @@ go.work
 
 # Mac System File
 .DS_Store
+
+# Built artifact
+*App
