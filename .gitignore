@@ -27,4 +27,4 @@ go.work
 *App
 
 # Database volume
-/project/db-data/*
+project/db-data/
