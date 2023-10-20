@@ -9,3 +9,16 @@ Building a simple microservoce with golang
     - Forward auth request to auth-service
 - authentication-service
     - Connected to Postgres database to authenticate user login
+- logger-service
+    - Connected to MongoDB to record log info
+- mail-service
+    - Use MailHog for email testing 
+
+
+## Tools
+- Back-end Service
+    - [go-chi]:(github.com/go-chi/chi), to simplify routes building for HTTp services
+- Mail Service
+    - MailHog
+    - [go-premailer]:(github.com/vanng822/go-premailer), to build inline styling for HTML mail
+SMTP port on 1025 and HTTP port on 8025
