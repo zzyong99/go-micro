@@ -17,8 +17,8 @@ Building a simple microservoce with golang
 
 ## Tools
 - Back-end Service
-    - [go-chi]:(github.com/go-chi/chi), to simplify routes building for HTTp services
+    - [go-chi](github.com/go-chi/chi), to simplify routes building for HTTp services
 - Mail Service
-    - MailHog
-    - [go-premailer]:(github.com/vanng822/go-premailer), to build inline styling for HTML mail
+    - [MailHog](https://github.com/mailhog/MailHog), to test mail service
+    - [go-premailer](github.com/vanng822/go-premailer), to build inline styling for HTML mail
 SMTP port on 1025 and HTTP port on 8025
