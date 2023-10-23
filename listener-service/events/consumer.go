@@ -83,7 +83,7 @@ func (consumer *Consumer) Listen(topics []string) error {
 		}
 	}()
 
-	fmt.Println("Waiting for message [Exchange, Queue] [logs_topic, %s]\n", q.Name)
+	fmt.Printf("Waiting for message [Exchange, Queue] [logs_topic, %s]\n", q.Name)
 	<-forever
 
 	return nil
