@@ -1,5 +1,5 @@
 # go-micro
-Building a simple microservoce with golang
+Building a simple microservice with golang
 
 ## Architecture
 - front-end
@@ -13,11 +13,14 @@ Building a simple microservoce with golang
     - Connected to MongoDB to record log info
 - mail-service
     - Use MailHog for email testing 
+- listener-service
+    - Utilized RabbitMQ to process the request
 
 
 ## Tools
-- Back-end Service
+- Back-end Architecture
     - [go-chi](https://github.com/go-chi/chi) simplifies routes building for HTTP services
+    - [RabbitMQ](https://github.com/rabbitmq/amqp091-go) buffers and processes the request
 - Mail Service
     - [MailHog](https://github.com/mailhog/MailHog) tests mail service
     - [go-premailer](https://github.com/vanng822/go-premailer) builds inline styling for HTML mail
