@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/rpc"
 )
 
 type RequestPayload struct {
@@ -32,6 +33,11 @@ type LogPayload struct {
 	Data string `json:"data"`
 }
 
+type RPCPayload struct {
+	Name string
+	Data string
+}
+
 func (app *Config) Broker(w http.ResponseWriter, r *http.Request) {
 	payload := jsonResponse{
 		Error:   false,
@@ -56,9 +62,14 @@ func (app *Config) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 		app.authenticate(w, requestPayload.Auth)
 	case "log":
 		// app.logItem(w, requestPayload.Log)
-		app.logEventViaMQ(w, requestPayload.Log)
+		// app.logEventViaMQ(w, requestPayload.Log)
+		app.logItemViaRPC(w, requestPayload.Log)
 	case "mail":
 		app.SendMail(w, requestPayload.Mail)
+	case "null":
+		// never use this, just to eliminate unused-check
+		app.logItem(w, requestPayload.Log)
+		app.logEventViaMQ(w, requestPayload.Log)
 	default:
 		app.errorJSON(w, errors.New("unknown action"))
 	}
@@ -98,6 +109,7 @@ func (app *Config) logItem(w http.ResponseWriter, entry LogPayload) {
 	app.writeJSON(w, http.StatusAccepted, payload)
 }
 
+// Authenticate calls the auth-service and sends back approriate response
 func (app *Config) authenticate(w http.ResponseWriter, ap AuthPayload) {
 	// create json we'll send to the auth microservice
 	jsonData, _ := json.MarshalIndent(ap, "", "\t")
@@ -185,6 +197,8 @@ func (app *Config) SendMail(w http.ResponseWriter, msg MailPayload) {
 	app.writeJSON(w, http.StatusAccepted, payload)
 }
 
+// LogEventViaMQ logs an event using logger-service. It makes the calls by pushing
+// the payload to MQ and let the service consume it.
 func (app *Config) logEventViaMQ(w http.ResponseWriter, l LogPayload) {
 	err := app.pushToQueue(l.Name, l.Data)
 	if err != nil {
@@ -199,6 +213,7 @@ func (app *Config) logEventViaMQ(w http.ResponseWriter, l LogPayload) {
 	app.writeJSON(w, http.StatusAccepted, payload)
 }
 
+// PushToQueue pushes a message into RabbitMQ
 func (app *Config) pushToQueue(name, msg string) error {
 	emitter, err := events.NewEventEmitter(app.Rabbit)
 	if err != nil {
@@ -217,4 +232,30 @@ func (app *Config) pushToQueue(name, msg string) error {
 	}
 
 	return nil
+}
+
+// s
+func (app *Config) logItemViaRPC(w http.ResponseWriter, l LogPayload) {
+	client, err := rpc.Dial("tcp", "logger-service:5001")
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	rpcPayload := RPCPayload(l)
+
+	var result string
+
+	err = client.Call("RPCServer.LogInfo", rpcPayload, &result)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	payload := jsonResponse{
+		Error:   false,
+		Message: result,
+	}
+
+	app.writeJSON(w, http.StatusAccepted, payload)
 }
