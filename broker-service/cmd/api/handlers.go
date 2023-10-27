@@ -1,6 +1,7 @@
 package main
 
 import (
+	"broker/events"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -40,6 +41,8 @@ func (app *Config) Broker(w http.ResponseWriter, r *http.Request) {
 	_ = app.writeJSON(w, http.StatusOK, payload)
 }
 
+// HandleSubmission is the main point of entry into the broker. It accepts a JSON
+// payload and performs an action based on the value of "action" in that JSON
 func (app *Config) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	var requestPayload RequestPayload
 
@@ -52,7 +55,8 @@ func (app *Config) HandleSubmission(w http.ResponseWriter, r *http.Request) {
 	case "auth":
 		app.authenticate(w, requestPayload.Auth)
 	case "log":
-		app.logItem(w, requestPayload.Log)
+		// app.logItem(w, requestPayload.Log)
+		app.logEventViaMQ(w, requestPayload.Log)
 	case "mail":
 		app.SendMail(w, requestPayload.Mail)
 	default:
@@ -179,4 +183,38 @@ func (app *Config) SendMail(w http.ResponseWriter, msg MailPayload) {
 	payload.Message = "Message sent to " + msg.To
 
 	app.writeJSON(w, http.StatusAccepted, payload)
+}
+
+func (app *Config) logEventViaMQ(w http.ResponseWriter, l LogPayload) {
+	err := app.pushToQueue(l.Name, l.Data)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	var payload jsonResponse
+	payload.Error = false
+	payload.Message = "logged via RabbitMQ"
+
+	app.writeJSON(w, http.StatusAccepted, payload)
+}
+
+func (app *Config) pushToQueue(name, msg string) error {
+	emitter, err := events.NewEventEmitter(app.Rabbit)
+	if err != nil {
+		return err
+	}
+
+	payload := LogPayload{
+		Name: name,
+		Data: msg,
+	}
+
+	jsonData, _ := json.MarshalIndent(&payload, "", "\t")
+	err = emitter.Push(string(jsonData), "log.INFO")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
