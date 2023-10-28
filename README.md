@@ -21,6 +21,7 @@ Building a simple microservice with golang
 - Back-end Architecture
     - [go-chi](https://github.com/go-chi/chi) simplifies routes building for HTTP services
     - [RabbitMQ](https://github.com/rabbitmq/amqp091-go) buffers and processes the request
+    - [gRPC](https://grpc.io/) connects service cross microservice cluster
 - Mail Service
     - [MailHog](https://github.com/mailhog/MailHog) tests mail service
     - [go-premailer](https://github.com/vanng822/go-premailer) builds inline styling for HTML mail
